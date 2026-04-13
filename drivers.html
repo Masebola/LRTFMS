@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver Management - LRTFMS</title>
+  <!-- Supabase Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Mobile Nav Overlay -->
+  <div class="nav-overlay" id="navOverlay" onclick="closeMenu()"></div>
+
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/traffic%20symbol-6oXmLgIzhYyP7pJHLD9kGc87FD3sfb.png" alt="National Traffic Police Logo" class="logo">
+        <div class="header-text">
+          <h1>Limpopo Department of Transport</h1>
+          <p>Traffic Fine Management System</p>
+        </div>
+      </div>
+      <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Open menu">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      <nav class="nav" id="mainNav">
+        <div class="nav-close">
+          <button class="nav-close-btn" onclick="closeMenu()" aria-label="Close menu">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <a href="index.html" class="nav-link">Home</a>
+        <span class="nav-link" id="officerName" style="opacity: 0.8;"></span>
+        <a href="#" class="nav-link" onclick="logout()">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <nav class="dashboard-nav">
+    <div class="dashboard-nav-content">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="drivers.html" class="nav-link active">Drivers</a>
+      <a href="fines.html" class="nav-link">Fines</a>
+      <a href="officer-appeals.html" class="nav-link">Appeals</a>
+      <a href="reports.html" class="nav-link">Reports</a>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="flex-between mb-2">
+      <div class="page-title" style="margin-bottom: 0;">
+        <h2>Driver Management</h2>
+        <p>Create and view driver profiles</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('addDriverModal')">
+        + Add New Driver
+      </button>
+    </div>
+
+    <div class="card mb-2">
+      <div class="card-header">
+        <h3>Search Drivers</h3>
+      </div>
+      <div class="card-body">
+        <div class="filter-section">
+          <input type="text" id="searchDriver" class="form-control" placeholder="Search by name or ID number..." style="max-width: 300px;">
+          <button class="btn btn-primary" onclick="searchDrivers()">Search</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Registered Drivers</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Full Name</th>
+                <th>ID Number</th>
+                <th>License Number</th>
+                <th>Contact</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="driversTable">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add Driver Modal -->
+  <div class="modal-overlay" id="addDriverModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add New Driver</h3>
+        <button class="modal-close" onclick="closeModal('addDriverModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addDriverForm">
+          <div class="form-group">
+            <label for="driverName">Full Name</label>
+            <input type="text" id="driverName" class="form-control" placeholder="Enter full name" required>
+          </div>
+          <div class="form-group">
+            <label for="idNumber">ID Number</label>
+            <input type="text" id="idNumber" class="form-control" placeholder="13-digit ID number" maxlength="13" required>
+          </div>
+          <div class="form-group">
+            <label for="licenseNumber">Driver's License Number</label>
+            <input type="text" id="licenseNumber" class="form-control" placeholder="e.g., LMP123456" required>
+          </div>
+          <div class="form-group">
+            <label for="contactNumber">Contact Number</label>
+            <input type="tel" id="contactNumber" class="form-control" placeholder="e.g., 079 123 4567" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address (Optional)</label>
+            <input type="email" id="email" class="form-control" placeholder="e.g., john@email.com">
+          </div>
+          <div class="form-group">
+            <label for="address">Physical Address</label>
+            <textarea id="address" class="form-control" placeholder="Enter residential address"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" style="background: var(--text-muted);" onclick="closeModal('addDriverModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addDriver()">Add Driver</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Driver Modal -->
+  <div class="modal-overlay" id="viewDriverModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Driver Details</h3>
+        <button class="modal-close" onclick="closeModal('viewDriverModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="driverDetails">
+          <!-- Driver details will be populated dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('viewDriverModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 Limpopo Department of Transport and Community Safety</p>
+    <p>Republic of South Africa</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+  <script src="drivers.js"></script>
+</body>
+</html>

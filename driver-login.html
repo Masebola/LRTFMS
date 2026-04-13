@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver Login - LRTFMS</title>
+  <!-- Supabase Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Mobile Nav Overlay -->
+  <div class="nav-overlay" id="navOverlay" onclick="closeMenu()"></div>
+
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/traffic%20symbol-6oXmLgIzhYyP7pJHLD9kGc87FD3sfb.png" alt="National Traffic Police Logo" class="logo">
+        <div class="header-text">
+          <h1>Limpopo Department of Transport</h1>
+          <p>Traffic Fine Management System</p>
+        </div>
+      </div>
+      <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Open menu">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      <nav class="nav" id="mainNav">
+        <div class="nav-close">
+          <button class="nav-close-btn" onclick="closeMenu()" aria-label="Close menu">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <a href="index.html" class="nav-link">Home</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="login-container">
+    <div class="login-card">
+      <div class="logo-section">
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/traffic%20symbol-6oXmLgIzhYyP7pJHLD9kGc87FD3sfb.png" alt="National Traffic Police Logo" class="logo">
+      </div>
+      <h2>Driver Portal</h2>
+      <p class="subtitle">Access your fines and appeal information</p>
+
+      <div id="loginError" class="alert alert-danger hidden">
+        Invalid ID number or license number. Please try again.
+      </div>
+
+      <form id="driverLoginForm">
+        <div class="form-group">
+          <label for="idNumber">ID Number</label>
+          <input type="text" id="idNumber" class="form-control" placeholder="13-digit ID number" maxlength="13" required>
+        </div>
+        <div class="form-group">
+          <label for="licenseNumber">License Number</label>
+          <input type="text" id="licenseNumber" class="form-control" placeholder="Enter your license number" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Login</button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+        <p style="font-size: 0.875rem; color: var(--text-muted);">
+          Need help? Contact us at<br>
+          <strong>0800 123 456</strong>
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Limpopo Department of Transport and Community Safety</p>
+    <p>Republic of South Africa</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+  <script src="driver-login.js"></script>
+</body>
+</html>

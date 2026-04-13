@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fine Management - LRTFMS</title>
+  <!-- Supabase Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Mobile Nav Overlay -->
+  <div class="nav-overlay" id="navOverlay" onclick="closeMenu()"></div>
+
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/traffic%20symbol-6oXmLgIzhYyP7pJHLD9kGc87FD3sfb.png" alt="National Traffic Police Logo" class="logo">
+        <div class="header-text">
+          <h1>Limpopo Department of Transport</h1>
+          <p>Traffic Fine Management System</p>
+        </div>
+      </div>
+      <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Open menu">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      <nav class="nav" id="mainNav">
+        <div class="nav-close">
+          <button class="nav-close-btn" onclick="closeMenu()" aria-label="Close menu">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <a href="index.html" class="nav-link">Home</a>
+        <span class="nav-link" id="officerName" style="opacity: 0.8;"></span>
+        <a href="#" class="nav-link" onclick="logout()">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <nav class="dashboard-nav">
+    <div class="dashboard-nav-content">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="drivers.html" class="nav-link">Drivers</a>
+      <a href="fines.html" class="nav-link active">Fines</a>
+      <a href="officer-appeals.html" class="nav-link">Appeals</a>
+      <a href="reports.html" class="nav-link">Reports</a>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="flex-between mb-2">
+      <div class="page-title" style="margin-bottom: 0;">
+        <h2>Fine Management</h2>
+        <p>Issue and track traffic fines</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('issueFineModal')">
+        + Issue New Fine
+      </button>
+    </div>
+
+    <div class="grid-2 mb-2">
+      <div class="card">
+        <div class="card-header">
+          <h3>Issue New Fine</h3>
+        </div>
+        <div class="card-body">
+          <form id="quickFineForm">
+            <div class="form-group">
+              <label for="qDriver">Select Driver</label>
+              <select id="qDriver" class="form-control" required>
+                <option value="">-- Select Driver --</option>
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="qOffense">Offense Type</label>
+              <select id="qOffense" class="form-control" required>
+                <option value="">-- Select Offense --</option>
+                <option value="Speeding" data-amount="1500">Speeding (R1,500)</option>
+                <option value="No License" data-amount="2500">Driving Without License (R2,500)</option>
+                <option value="Red Light" data-amount="1000">Running Red Light (R1,000)</option>
+                <option value="No Seatbelt" data-amount="500">No Seatbelt (R500)</option>
+                <option value="Illegal Parking" data-amount="750">Illegal Parking (R750)</option>
+                <option value="Reckless Driving" data-amount="3000">Reckless Driving (R3,000)</option>
+                <option value="Unroadworthy Vehicle" data-amount="2000">Unroadworthy Vehicle (R2,000)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="qAmount">Fine Amount (R)</label>
+              <input type="number" id="qAmount" class="form-control" placeholder="Amount in Rands" required>
+            </div>
+            <div class="form-group">
+              <label for="qLocation">Location</label>
+              <input type="text" id="qLocation" class="form-control" placeholder="e.g., N1 Highway, Polokwane" required>
+            </div>
+            <div class="form-group">
+              <label for="qDate">Date of Offense</label>
+              <input type="date" id="qDate" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Issue Fine</button>
+          </form>
+
+          <div id="fineRecordDisplay" class="fine-record hidden">
+            <h4>Fine Record Generated</h4>
+            <div id="fineRecordContent"></div>
+            <button class="btn btn-gold btn-block mt-1" onclick="printFine()">Print Fine Record</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Filter Fines</h3>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label for="filterStatus">Status</label>
+            <select id="filterStatus" class="form-control">
+              <option value="all">All Fines</option>
+              <option value="unpaid">Unpaid Only</option>
+              <option value="paid">Paid Only</option>
+              <option value="pending">Under Appeal</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filterDriver">Driver Name</label>
+            <input type="text" id="filterDriver" class="form-control" placeholder="Search by name...">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Fine Records</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Fine ID</th>
+                <th>Driver</th>
+                <th>Offense</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="finesTable">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Issue Fine Modal (if needed) -->
+  <div class="modal-overlay" id="issueFineModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Issue New Fine</h3>
+        <button class="modal-close" onclick="closeModal('issueFineModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Same form as quick issue, can reuse -->
+        <form id="modalFineForm">
+          <div class="form-group">
+            <label for="mDriver">Select Driver</label>
+            <select id="mDriver" class="form-control" required>
+              <option value="">-- Select Driver --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="mOffense">Offense Type</label>
+            <select id="mOffense" class="form-control" required>
+              <option value="">-- Select Offense --</option>
+              <option value="Speeding" data-amount="1500">Speeding (R1,500)</option>
+              <option value="No License" data-amount="2500">Driving Without License (R2,500)</option>
+              <option value="Red Light" data-amount="1000">Running Red Light (R1,000)</option>
+              <option value="No Seatbelt" data-amount="500">No Seatbelt (R500)</option>
+              <option value="Illegal Parking" data-amount="750">Illegal Parking (R750)</option>
+              <option value="Reckless Driving" data-amount="3000">Reckless Driving (R3,000)</option>
+              <option value="Unroadworthy Vehicle" data-amount="2000">Unroadworthy Vehicle (R2,000)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="mAmount">Fine Amount (R)</label>
+            <input type="number" id="mAmount" class="form-control" placeholder="Amount in Rands" required>
+          </div>
+          <div class="form-group">
+            <label for="mLocation">Location</label>
+            <input type="text" id="mLocation" class="form-control" placeholder="e.g., N1 Highway, Polokwane" required>
+          </div>
+          <div class="form-group">
+            <label for="mDate">Date of Offense</label>
+            <input type="date" id="mDate" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Issue Fine</button>
+        </form>
+        <div id="modalFineRecordDisplay" class="fine-record hidden">
+          <h4>Fine Record Generated</h4>
+          <div id="modalFineRecordContent"></div>
+          <button class="btn btn-gold btn-block mt-1" onclick="printFine()">Print Fine Record</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('issueFineModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 Limpopo Department of Transport and Community Safety</p>
+    <p>Republic of South Africa</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+  <script src="fines.js"></script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver Portal - LRTFMS</title>
+  <!-- Supabase Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Mobile Nav Overlay -->
+  <div class="nav-overlay" id="navOverlay" onclick="closeMenu()"></div>
+
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/traffic%20symbol-6oXmLgIzhYyP7pJHLD9kGc87FD3sfb.png" alt="National Traffic Police Logo" class="logo">
+        <div class="header-text">
+          <h1>Limpopo Department of Transport</h1>
+          <p>Traffic Fine Management System</p>
+        </div>
+      </div>
+      <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Open menu">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      <nav class="nav" id="mainNav">
+        <div class="nav-close">
+          <button class="nav-close-btn" onclick="closeMenu()" aria-label="Close menu">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <a href="index.html" class="nav-link">Home</a>
+        <span class="nav-link" id="driverInfo" style="opacity: 0.8;"></span>
+        <a href="#" class="nav-link" onclick="logout()">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <nav class="dashboard-nav driver-nav">
+    <div class="dashboard-nav-content">
+      <a href="#my-fines" class="nav-link active" onclick="showSection('fines')">My Fines</a>
+      <a href="#my-appeals" class="nav-link" onclick="showSection('appeals')">My Appeals</a>
+      <a href="#submit-appeal" class="nav-link" onclick="showSection('submit')">Submit Appeal</a>
+    </div>
+  </nav>
+
+  <main class="main">
+    <!-- My Fines Section -->
+    <section id="fines-section" class="portal-section">
+      <div class="page-title">
+        <h2>My Fines</h2>
+        <p>View all fines associated with your ID number</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="totalDriverFines">0</div>
+          <div class="stat-label">Total Fines</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-value" id="paidDriverFines">0</div>
+          <div class="stat-label">Paid</div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-value" id="unpaidDriverFines">0</div>
+          <div class="stat-label">Unpaid</div>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-value" id="totalOwed">R0.00</div>
+          <div class="stat-label">Amount Owed</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Fine Records</h3>
+        </div>
+        <div class="card-body">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fine ID</th>
+                  <th>Date</th>
+                  <th>Offense</th>
+                  <th>Location</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="driverFinesTable">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-2">
+        <div class="card-header">
+          <h3>Payment Information</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-grid">
+            <div class="info-item">
+              <h4>Post Office</h4>
+              <p>Pay at any South African Post Office with your fine reference number</p>
+            </div>
+            <div class="info-item">
+              <h4>Bank Transfer</h4>
+              <p>Bank: ABSA<br>Account: 123456789<br>Reference: Your Fine ID</p>
+            </div>
+            <div class="info-item">
+              <h4>Online Payment</h4>
+              <p>EFT payments accepted. Use your Fine ID as reference</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- My Appeals Section -->
+    <section id="appeals-section" class="portal-section hidden">
+      <div class="page-title">
+        <h2>My Appeals</h2>
+        <p>Track the status of your submitted appeals</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Appeal History</h3>
+        </div>
+        <div class="card-body">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Appeal ID</th>
+                  <th>Fine ID</th>
+                  <th>Reason</th>
+                  <th>Submitted</th>
+                  <th>Status</th>
+                  <th>Response</th>
+                </tr>
+              </thead>
+              <tbody id="driverAppealsTable">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div id="noAppeals" class="hidden" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+            <p>You have no appeals on record.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-2">
+        <div class="card-header">
+          <h3>Appeal Guidelines</h3>
+        </div>
+        <div class="card-body">
+          <div style="font-size: 0.875rem; color: var(--text-muted);">
+            <ul style="padding-left: 1.25rem; line-height: 1.8;">
+              <li>Appeals must be submitted within <strong>32 days</strong> of fine issuance</li>
+              <li>You will receive a response within <strong>14 business days</strong></li>
+              <li>The fine remains payable until the appeal is approved</li>
+              <li>False declarations may result in additional penalties</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Submit Appeal Section -->
+    <section id="submit-section" class="portal-section hidden">
+      <div class="page-title">
+        <h2>Submit New Appeal</h2>
+        <p>Appeal a fine if you believe it was issued incorrectly</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h3>Appeal Form</h3>
+          </div>
+          <div class="card-body">
+            <div id="appealSuccess" class="alert alert-success hidden">
+              Your appeal has been submitted successfully. Reference: <span id="appealRef"></span>
+            </div>
+
+            <form id="appealForm">
+              <div class="form-group">
+                <label for="fineId">Fine ID / Reference Number</label>
+                <input type="text" id="fineId" class="form-control" placeholder="e.g., FIN-2026-001" required>
+              </div>
+              <div class="form-group">
+                <label for="appealReason">Reason for Appeal</label>
+                <select id="appealReason" class="form-control" required>
+                  <option value="">-- Select Reason --</option>
+                  <option value="Incorrect Details">Incorrect Details on Fine</option>
+                  <option value="Not the Driver">I Was Not the Driver</option>
+                  <option value="Vehicle Stolen">Vehicle Was Stolen</option>
+                  <option value="Faulty Equipment">Faulty Detection Equipment</option>
+                  <option value="Emergency">Emergency Situation</option>
+                  <option value="Other">Other (Please Specify)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="appealDetails">Detailed Explanation</label>
+                <textarea id="appealDetails" class="form-control" placeholder="Please provide a detailed explanation of why you are appealing this fine..." required></textarea>
+              </div>
+              <div class="form-group">
+                <label for="contactNumber">Contact Number</label>
+                <input type="tel" id="contactNumber" class="form-control" placeholder="e.g., 079 123 4567" required>
+              </div>
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" class="form-control" placeholder="e.g., name@email.com" required>
+              </div>
+              <div class="form-group">
+                <label for="supportingDocs">Supporting Documents (Optional)</label>
+                <input type="file" id="supportingDocs" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                <small style="color: var(--text-muted); font-size: 0.75rem;">Accepted formats: PDF, JPG, PNG (Max 5MB)</small>
+              </div>
+              <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" id="declaration" required>
+                  <span>I declare that the information provided is true and correct</span>
+                </label>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">Submit Appeal</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Important Information</h3>
+          </div>
+          <div class="card-body">
+            <div style="font-size: 0.875rem; color: var(--text-muted);">
+              <p style="margin-bottom: 1rem;"><strong>Before You Appeal:</strong></p>
+              <ul style="padding-left: 1.25rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                <li>Ensure you have the correct Fine ID</li>
+                <li>Gather any supporting documents</li>
+                <li>Be prepared to provide detailed information</li>
+                <li>False declarations are punishable by law</li>
+              </ul>
+              
+              <p style="margin-bottom: 1rem;"><strong>Valid Appeal Reasons:</strong></p>
+              <ul style="padding-left: 1.25rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                <li>Incorrect vehicle or driver details</li>
+                <li>You were not driving the vehicle</li>
+                <li>Vehicle was stolen at the time</li>
+                <li>Faulty speed camera or equipment</li>
+                <li>Emergency circumstances</li>
+              </ul>
+
+              <p>
+                <strong>Contact Us:</strong><br>
+                Phone: 0800 123 456<br>
+                Email: appeals@limpopo.gov.za
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Quick Appeal Modal -->
+  <div class="modal-overlay" id="appealModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Quick Appeal</h3>
+        <button class="modal-close" onclick="closeModal('appealModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1rem;">You are about to appeal fine: <strong id="modalFineId"></strong></p>
+        <div class="form-group">
+          <label for="quickAppealReason">Reason for Appeal</label>
+          <select id="quickAppealReason" class="form-control" required>
+            <option value="">-- Select Reason --</option>
+            <option value="Incorrect Details">Incorrect Details on Fine</option>
+            <option value="Not the Driver">I Was Not the Driver</option>
+            <option value="Vehicle Stolen">Vehicle Was Stolen</option>
+            <option value="Faulty Equipment">Faulty Detection Equipment</option>
+            <option value="Emergency">Emergency Situation</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="quickAppealDetails">Brief Explanation</label>
+          <textarea id="quickAppealDetails" class="form-control" placeholder="Briefly explain your reason..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('appealModal')">Cancel</button>
+        <button class="btn btn-gold" onclick="submitQuickAppeal()">Submit Appeal</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 Limpopo Department of Transport and Community Safety</p>
+    <p>Republic of South Africa</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+  <script src="driver-portal.js"></script>
+</body>
+</html>

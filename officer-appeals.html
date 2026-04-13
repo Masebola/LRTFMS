@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Review Appeals - LRTFMS</title>
+  <!-- Supabase Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Mobile Nav Overlay -->
+  <div class="nav-overlay" id="navOverlay" onclick="closeMenu()"></div>
+
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/traffic%20symbol-6oXmLgIzhYyP7pJHLD9kGc87FD3sfb.png" alt="National Traffic Police Logo" class="logo">
+        <div class="header-text">
+          <h1>Limpopo Department of Transport</h1>
+          <p>Traffic Fine Management System</p>
+        </div>
+      </div>
+      <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Open menu">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      <nav class="nav" id="mainNav">
+        <div class="nav-close">
+          <button class="nav-close-btn" onclick="closeMenu()" aria-label="Close menu">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <a href="index.html" class="nav-link">Home</a>
+        <span class="nav-link" id="officerName" style="opacity: 0.8;"></span>
+        <a href="#" class="nav-link" onclick="logout()">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <nav class="dashboard-nav">
+    <div class="dashboard-nav-content">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="drivers.html" class="nav-link">Drivers</a>
+      <a href="fines.html" class="nav-link">Fines</a>
+      <a href="officer-appeals.html" class="nav-link active">Appeals</a>
+      <a href="reports.html" class="nav-link">Reports</a>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="page-title flex-between">
+      <div>
+        <h2>Appeal Review</h2>
+        <p>Review and process driver appeal requests</p>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="totalAppeals">0</div>
+        <div class="stat-label">Total Appeals</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-value" id="pendingAppeals">0</div>
+        <div class="stat-label">Pending Review</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-value" id="approvedAppeals">0</div>
+        <div class="stat-label">Approved</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-value" id="rejectedAppeals">0</div>
+        <div class="stat-label">Rejected</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Filter Appeals</h3>
+      </div>
+      <div class="card-body">
+        <div class="filter-section">
+          <select id="statusFilter" class="form-control">
+            <option value="">All Status</option>
+            <option value="pending">Pending Review</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <input type="text" id="searchAppeal" class="form-control" placeholder="Search by Appeal ID or Driver...">
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-2">
+      <div class="card-header">
+        <h3>All Appeals</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table id="appealsTable">
+            <thead>
+              <tr>
+                <th>Appeal ID</th>
+                <th>Fine ID</th>
+                <th>Driver</th>
+                <th>ID Number</th>
+                <th>Reason</th>
+                <th>Submitted</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Appeal Detail Modal (optional, can be implemented later) -->
+  <div class="modal-overlay" id="appealDetailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Appeal Details</h3>
+        <button class="modal-close" onclick="closeModal('appealDetailModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="appealDetailContent">
+        <!-- Content will be populated dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('appealDetailModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 Limpopo Department of Transport and Community Safety</p>
+    <p>Republic of South Africa</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+  <script src="officer-appeals.js"></script>
+</body>
+</html>

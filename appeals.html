@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appeals - LRTFMS</title>
+  <!-- Supabase Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/traffic%20symbol-6oXmLgIzhYyP7pJHLD9kGc87FD3sfb.png" alt="National Traffic Police Logo" class="logo">
+        <div class="header-text">
+          <h1>Limpopo Department of Transport</h1>
+          <p>Traffic Fine Management System</p>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="login.html" class="nav-link">Officer Login</a>
+        <a href="appeals.html" class="nav-link active">Appeals</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="page-title">
+      <h2>Fine Appeal System</h2>
+      <p>Submit an appeal if you believe a fine was issued incorrectly</p>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <h3>Submit New Appeal</h3>
+        </div>
+        <div class="card-body">
+          <div id="appealSuccess" class="alert alert-success hidden">
+            Your appeal has been submitted successfully. Reference: <span id="appealRef"></span>
+          </div>
+          <div id="appealError" class="alert alert-danger hidden"></div>
+
+          <form id="appealForm">
+            <div class="form-group">
+              <label for="fineId">Fine ID / Reference Number</label>
+              <input type="text" id="fineId" class="form-control" placeholder="e.g., FIN-2026-001" required>
+            </div>
+            <div class="form-group">
+              <label for="idNumber">Your ID Number</label>
+              <input type="text" id="idNumber" class="form-control" placeholder="13-digit ID number" maxlength="13" required>
+            </div>
+            <div class="form-group">
+              <label for="fullName">Full Name</label>
+              <input type="text" id="fullName" class="form-control" placeholder="Enter your full name" required>
+            </div>
+            <div class="form-group">
+              <label for="contactNumber">Contact Number</label>
+              <input type="tel" id="contactNumber" class="form-control" placeholder="e.g., 079 123 4567" required>
+            </div>
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" class="form-control" placeholder="e.g., name@email.com" required>
+            </div>
+            <div class="form-group">
+              <label for="appealReason">Reason for Appeal</label>
+              <select id="appealReason" class="form-control" required>
+                <option value="">-- Select Reason --</option>
+                <option value="Incorrect Details">Incorrect Details on Fine</option>
+                <option value="Not the Driver">I Was Not the Driver</option>
+                <option value="Vehicle Stolen">Vehicle Was Stolen</option>
+                <option value="Faulty Equipment">Faulty Detection Equipment</option>
+                <option value="Emergency">Emergency Situation</option>
+                <option value="Other">Other (Please Specify)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="appealDetails">Detailed Explanation</label>
+              <textarea id="appealDetails" class="form-control" placeholder="Please provide a detailed explanation of why you are appealing this fine..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="supportingDocs">Supporting Documents (Optional)</label>
+              <input type="file" id="supportingDocs" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+              <small style="color: var(--text-muted); font-size: 0.75rem;">Accepted formats: PDF, JPG, PNG (Max 5MB)</small>
+            </div>
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="declaration" required>
+                <span>I declare that the information provided is true and correct</span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Submit Appeal</button>
+          </form>
+        </div>
+      </div>
+
+      <div>
+        <div class="card mb-2">
+          <div class="card-header">
+            <h3>Check Appeal Status</h3>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="checkAppealId">Appeal Reference Number</label>
+              <input type="text" id="checkAppealId" class="form-control" placeholder="e.g., APL-2026-001">
+            </div>
+            <button class="btn btn-gold btn-block" onclick="checkAppealStatus()">Check Status</button>
+
+            <div id="appealStatusResult" class="fine-record hidden mt-1">
+              <!-- Status will be displayed here -->
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Appeal Guidelines</h3>
+          </div>
+          <div class="card-body">
+            <div style="font-size: 0.875rem; color: var(--text-muted);">
+              <p style="margin-bottom: 1rem;"><strong>Important Information:</strong></p>
+              <ul style="padding-left: 1.25rem; line-height: 1.8;">
+                <li>Appeals must be submitted within <strong>32 days</strong> of fine issuance</li>
+                <li>You will receive a response within <strong>14 business days</strong></li>
+                <li>The fine remains payable until the appeal is approved</li>
+                <li>False declarations may result in additional penalties</li>
+                <li>Keep your appeal reference number for tracking</li>
+              </ul>
+              <p style="margin-top: 1rem;">
+                <strong>Contact Us:</strong><br>
+                Phone: 0800 123 456<br>
+                Email: appeals@limpopo.gov.za
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-2">
+      <div class="card-header">
+        <h3>Recent Appeals</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Appeal ID</th>
+                <th>Fine ID</th>
+                <th>Appellant</th>
+                <th>Reason</th>
+                <th>Submitted</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="appealsTable">
+              <!-- Recent appeals can be dynamically loaded if desired, otherwise leave static examples -->
+              <tr>
+                <td>APL-2026-001</td>
+                <td>FIN-2026-003</td>
+                <td>Peter Mahlangu</td>
+                <td>Faulty Equipment</td>
+                <td>28 Mar 2026</td>
+                <td><span class="status status-pending">Under Review</span></td>
+              </tr>
+              <tr>
+                <td>APL-2026-002</td>
+                <td>FIN-2026-008</td>
+                <td>Maria Sithole</td>
+                <td>Not the Driver</td>
+                <td>25 Mar 2026</td>
+                <td><span class="status status-approved">Approved</span></td>
+              </tr>
+              <tr>
+                <td>APL-2026-003</td>
+                <td>FIN-2026-012</td>
+                <td>David Khumalo</td>
+                <td>Incorrect Details</td>
+                <td>22 Mar 2026</td>
+                <td><span class="status status-rejected">Rejected</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Limpopo Department of Transport and Community Safety</p>
+    <p>Republic of South Africa</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+  <script src="appeals.js"></script>
+</body>
+</html>
