@@ -27,8 +27,11 @@ async function loadPayments() {
         amount,
         payment_method,
         paid_at,
-        fines!inner(fine_number),
-        drivers!fines!inner(full_name)
+        fines!inner(
+          fine_number,
+          driver_id,
+          drivers!inner(full_name)
+        )
       `)
       .order('paid_at', { ascending: false });
 
@@ -38,7 +41,9 @@ async function loadPayments() {
     displayPayments(allPayments);
     updateStats(allPayments);
   } catch (error) {
-    console.error('Error loading payments:', error);
+    console.error('Error loading payments:', error.message);
+    // Log the full error object for debugging
+    console.log('Full error:', error);
     showToast('Failed to load payments', 'error');
   }
 }
@@ -53,16 +58,17 @@ function displayPayments(payments) {
   }
 
   payments.forEach(payment => {
-    const row = document.createElement('tr');
+    const fineNumber = payment.fines?.fine_number || 'Unknown';
+    const driverName = payment.fines?.drivers?.full_name || 'Unknown';
     const paidDate = new Date(payment.paid_at).toLocaleDateString('en-ZA', {
       day: '2-digit', month: 'short', year: 'numeric'
     });
     const method = payment.payment_method || 'Simulated';
-    const driverName = payment.drivers?.full_name || 'Unknown';
 
+    const row = document.createElement('tr');
     row.innerHTML = `
       <td>${payment.transaction_ref || '—'}</td>
-      <td>${payment.fines.fine_number}</td>
+      <td>${fineNumber}</td>
       <td>${driverName}</td>
       <td>${formatCurrency(payment.amount)}</td>
       <td>${method}</td>
@@ -90,8 +96,8 @@ function filterPayments() {
 
   if (searchTerm) {
     filtered = filtered.filter(p => 
-      p.fines.fine_number.toLowerCase().includes(searchTerm) ||
-      (p.drivers?.full_name || '').toLowerCase().includes(searchTerm) ||
+      (p.fines?.fine_number || '').toLowerCase().includes(searchTerm) ||
+      (p.fines?.drivers?.full_name || '').toLowerCase().includes(searchTerm) ||
       (p.transaction_ref || '').toLowerCase().includes(searchTerm)
     );
   }
