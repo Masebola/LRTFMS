@@ -348,3 +348,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.toggleMenu = toggleMenu;
   window.closeMenu = closeMenu;
 });
+
+async function generateMonthlyReport() {
+  const monthSelect = document.getElementById('reportMonth');
+  const selected = monthSelect.value;
+  
+  if (selected === 'all') {
+    showToast('Please select a specific month to generate a report.', 'warning');
+    return;
+  }
+
+  // Fetch data for the selected month (reuse existing logic or call loadReportData)
+  await loadReportData(selected);
+  
+  // Wait a moment for UI to update, then trigger print
+  setTimeout(() => {
+    window.print();
+  }, 500);
+}
+
+// Expose to global
+window.generateMonthlyReport = generateMonthlyReport;
