@@ -39,7 +39,7 @@ async function loadDriverFines() {
     let unpaidCount = 0;
 
     if (fines.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem;">No fines on record.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2rem;">No fines on record.</td></tr>`;
     } else {
       fines.forEach(fine => {
         const formattedDate = new Date(fine.offense_date).toLocaleDateString('en-ZA', {
@@ -50,18 +50,27 @@ async function loadDriverFines() {
                          fine.status === 'unpaid' ? 'status-unpaid' : 'status-pending';
         let statusText = fine.status.charAt(0).toUpperCase() + fine.status.slice(1);
 
-        let actionBtn = '';
+        // Appeal button (only for unpaid)
+        let appealBtn = '';
         if (fine.status === 'unpaid') {
-          actionBtn = `<button class="btn btn-sm btn-gold" onclick="openAppealModal('${fine.id}')">Appeal</button>`;
+          appealBtn = `<button class="btn btn-sm btn-gold" onclick="openAppealModal('${fine.id}')">Appeal</button>`;
           unpaidCount++;
           totalOwed += parseFloat(fine.amount);
         } else if (fine.status === 'paid') {
-          actionBtn = `<span style="color: var(--text-muted); font-size: 0.875rem;">—</span>`;
+          appealBtn = `<span style="color: var(--text-muted); font-size: 0.875rem;">—</span>`;
           paidCount++;
         } else {
-          actionBtn = `<span style="color: var(--text-muted); font-size: 0.875rem;">Under Appeal</span>`;
+          appealBtn = `<span style="color: var(--text-muted); font-size: 0.875rem;">Under Appeal</span>`;
           unpaidCount++;
           totalOwed += parseFloat(fine.amount);
+        }
+
+        // Pay button (only for unpaid, not under appeal)
+        let payBtn = '';
+        if (fine.status === 'unpaid') {
+          payBtn = `<button class="btn btn-sm btn-success" onclick="payFine('${fine.id}')">Pay Now</button>`;
+        } else {
+          payBtn = `<span style="color: var(--text-muted); font-size: 0.875rem;">—</span>`;
         }
 
         const row = document.createElement('tr');
@@ -72,7 +81,8 @@ async function loadDriverFines() {
           <td>${fine.location}</td>
           <td>${formatCurrency(fine.amount)}</td>
           <td><span class="status ${statusClass}">${statusText}</span></td>
-          <td>${actionBtn}</td>
+          <td>${appealBtn}</td>
+          <td>${payBtn}</td>
         `;
         tbody.appendChild(row);
       });
@@ -85,6 +95,54 @@ async function loadDriverFines() {
   } catch (error) {
     console.error('Error loading fines:', error);
     showToast('Failed to load your fines', 'error');
+  }
+}
+
+// Simulated payment by driver
+async function payFine(fineId) {
+  try {
+    // Confirm with the driver
+    if (!confirm('Are you sure you want to simulate payment for this fine?')) {
+      return;
+    }
+
+    // Get fine details
+    const { data: fine, error: fineError } = await supabaseClient
+      .from('fines')
+      .select('amount')
+      .eq('id', fineId)
+      .single();
+
+    if (fineError) throw fineError;
+
+    // Insert payment record
+    const transactionRef = 'SIM-DRV-' + Date.now();
+    const { error: paymentError } = await supabaseClient
+      .from('payments')
+      .insert([{
+        fine_id: fineId,
+        amount: fine.amount,
+        payment_method: 'driver_portal',
+        transaction_ref: transactionRef
+      }]);
+
+    if (paymentError) throw paymentError;
+
+    // Update fine status to paid
+    const { error: updateError } = await supabaseClient
+      .from('fines')
+      .update({ status: 'paid' })
+      .eq('id', fineId);
+
+    if (updateError) throw updateError;
+
+    showToast('Payment successful! Transaction Ref: ' + transactionRef, 'success');
+
+    // Refresh fines list
+    await loadDriverFines();
+  } catch (error) {
+    console.error('Payment failed:', error);
+    showToast('Payment failed. Please try again.', 'error');
   }
 }
 
@@ -309,6 +367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Expose functions to global scope
   window.openAppealModal = openAppealModal;
+  window.payFine = payFine; // NEW
   window.submitQuickAppeal = submitQuickAppeal;
   window.showSection = showSection;
   window.logout = logout;
