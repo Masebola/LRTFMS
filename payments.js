@@ -6,6 +6,18 @@
 let currentOfficer = null;
 let allPayments = [];
 
+// Map raw payment method to user-friendly label
+function getPaymentMethodLabel(method) {
+  switch (method) {
+    case 'driver_portal':
+      return 'Online Payment';
+    case 'simulated':
+      return 'Direct Payment';
+    default:
+      return method || 'Unknown';
+  }
+}
+
 // Check authentication
 async function checkAuth() {
   const user = await getCurrentOfficer();
@@ -42,7 +54,6 @@ async function loadPayments() {
     updateStats(allPayments);
   } catch (error) {
     console.error('Error loading payments:', error.message);
-    // Log the full error object for debugging
     console.log('Full error:', error);
     showToast('Failed to load payments', 'error');
   }
@@ -63,7 +74,7 @@ function displayPayments(payments) {
     const paidDate = new Date(payment.paid_at).toLocaleDateString('en-ZA', {
       day: '2-digit', month: 'short', year: 'numeric'
     });
-    const method = payment.payment_method || 'Simulated';
+    const methodLabel = getPaymentMethodLabel(payment.payment_method);
 
     const row = document.createElement('tr');
     row.innerHTML = `
@@ -71,7 +82,7 @@ function displayPayments(payments) {
       <td>${fineNumber}</td>
       <td>${driverName}</td>
       <td>${formatCurrency(payment.amount)}</td>
-      <td>${method}</td>
+      <td>${methodLabel}</td>
       <td>${paidDate}</td>
     `;
     tbody.appendChild(row);
@@ -90,7 +101,7 @@ function updateStats(payments) {
 
 function filterPayments() {
   const searchTerm = document.getElementById('searchPayment').value.toLowerCase();
-  const monthFilter = document.getElementById('filterMonth').value; // format: YYYY-MM
+  const monthFilter = document.getElementById('filterMonth').value;
 
   let filtered = allPayments;
 
@@ -154,7 +165,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await loadPayments();
 
-  // Expose filter functions
   window.filterPayments = filterPayments;
   window.resetFilters = resetFilters;
   window.logout = logout;
