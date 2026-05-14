@@ -53,6 +53,7 @@ async function loadAppeals() {
 
       const row = document.createElement('tr');
       row.dataset.status = appeal.status;
+      row.dataset.appealId = appeal.id; // <-- allows us to find the row later
 
       const submittedDate = new Date(appeal.submitted_at).toLocaleDateString('en-ZA', {
         day: '2-digit', month: 'short', year: 'numeric'
@@ -71,17 +72,20 @@ async function loadAppeals() {
         statusText = 'Rejected';
       }
 
+      // Build actions column
       let actions = '';
       if (appeal.status === 'pending') {
-        actions = `
+        actions += `
           <button class="btn btn-sm btn-success" onclick="approveAppeal('${appeal.id}', this)">Approve</button>
           <button class="btn btn-sm btn-danger" onclick="rejectAppeal('${appeal.id}', this)">Reject</button>
         `;
       } else {
-        actions = `<span style="color: var(--text-muted); font-size: 0.875rem;">Processed</span>`;
+        actions += `<span style="color: var(--text-muted); font-size: 0.875rem;">Processed</span>`;
       }
+      // View details button (always shown)
+      actions += ` <button class="btn btn-sm btn-primary" onclick="viewAppealDetails('${appeal.id}')">View Details</button>`;
 
-      // Mask ID number for display
+      // Mask ID number
       const idNumber = appeal.drivers.id_number;
       const maskedId = idNumber.substring(0, 6) + '****' + idNumber.substring(10);
 
@@ -95,6 +99,16 @@ async function loadAppeals() {
         <td><span class="status ${statusClass}">${statusText}</span></td>
         <td>${actions}</td>
       `;
+
+      // Store additional data on the row for the details modal
+      row.dataset.details = appeal.details || '';
+      row.dataset.appealNumber = appeal.appeal_number;
+      row.dataset.reason = appeal.reason;
+      row.dataset.driverName = appeal.drivers.full_name;
+      row.dataset.fineNumber = appeal.fines.fine_number;
+      row.dataset.submittedDate = submittedDate;
+      row.dataset.status = appeal.status;
+
       tbody.appendChild(row);
     });
 
@@ -106,18 +120,40 @@ async function loadAppeals() {
   }
 }
 
-// Update statistics cards
-function updateStats(total, pending, approved, rejected) {
-  document.getElementById('totalAppeals').textContent = total;
-  document.getElementById('pendingAppeals').textContent = pending;
-  document.getElementById('approvedAppeals').textContent = approved;
-  document.getElementById('rejectedAppeals').textContent = rejected;
+// Show appeal details in modal
+function viewAppealDetails(appealId) {
+  const row = document.querySelector(`tr[data-appeal-id="${appealId}"]`);
+  if (!row) return;
+
+  const details = row.dataset.details || 'No explanation provided.';
+  const appealNumber = row.dataset.appealNumber;
+  const reason = row.dataset.reason;
+  const driverName = row.dataset.driverName;
+  const fineNumber = row.dataset.fineNumber;
+  const submittedDate = row.dataset.submittedDate;
+  const status = row.dataset.status;
+
+  const content = document.getElementById('appealDetailContent');
+  content.innerHTML = `
+    <div class="fine-record">
+      <div class="fine-detail"><span>Appeal ID:</span><span>${appealNumber}</span></div>
+      <div class="fine-detail"><span>Fine ID:</span><span>${fineNumber}</span></div>
+      <div class="fine-detail"><span>Driver:</span><span>${driverName}</span></div>
+      <div class="fine-detail"><span>Reason:</span><span>${reason}</span></div>
+      <div class="fine-detail"><span>Status:</span><span>${status}</span></div>
+      <div class="fine-detail"><span>Submitted:</span><span>${submittedDate}</span></div>
+      <div class="fine-detail" style="flex-direction: column; align-items: flex-start;">
+        <span>Detailed Explanation:</span>
+        <p style="margin-top: 0.5rem; white-space: pre-wrap; font-weight: normal;">${details}</p>
+      </div>
+    </div>
+  `;
+  openModal('appealDetailModal');
 }
 
 // Approve an appeal
 async function approveAppeal(appealId, btn) {
   try {
-    // Get officer ID for reviewer
     const { data: officerData } = await supabaseClient
       .from('officers')
       .select('id')
@@ -135,19 +171,8 @@ async function approveAppeal(appealId, btn) {
 
     if (appealError) throw appealError;
 
-    // Get the fine_id associated with this appeal
-    const { data: appeal } = await supabaseClient
-      .from('appeals')
-      .select('fine_id')
-      .eq('id', appealId)
-      .single();
-
-    // Update fine status to 'pending' or keep as is? Typically approved appeal cancels fine.
-    // For now, we'll set fine status to 'pending' (under appeal resolved) or keep unpaid? 
-    // We'll leave fine unchanged, but in real system you might cancel it.
-    
     showToast('Appeal approved successfully', 'success');
-    await loadAppeals(); // Refresh table and stats
+    await loadAppeals();
   } catch (error) {
     console.error('Error approving appeal:', error);
     showToast('Failed to approve appeal', 'error');
@@ -182,7 +207,15 @@ async function rejectAppeal(appealId, btn) {
   }
 }
 
-// Filter appeals based on status and search
+// Update statistics cards
+function updateStats(total, pending, approved, rejected) {
+  document.getElementById('totalAppeals').textContent = total;
+  document.getElementById('pendingAppeals').textContent = pending;
+  document.getElementById('approvedAppeals').textContent = approved;
+  document.getElementById('rejectedAppeals').textContent = rejected;
+}
+
+// Filter appeals
 function filterAppeals() {
   const statusFilter = document.getElementById('statusFilter').value;
   const searchTerm = document.getElementById('searchAppeal').value.toLowerCase();
@@ -199,7 +232,7 @@ function filterAppeals() {
   });
 }
 
-// Logout function
+// Logout
 function logout() {
   supabaseClient.auth.signOut().then(() => {
     sessionStorage.removeItem('officerLoggedIn');
@@ -208,7 +241,7 @@ function logout() {
   });
 }
 
-// Mobile menu functions
+// Mobile menu
 function toggleMenu() {
   document.getElementById('mainNav').classList.toggle('active');
   document.getElementById('navOverlay').classList.toggle('active');
@@ -227,14 +260,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!user) return;
   currentOfficer = user;
 
-  // Display officer name
   const officerName = user.user_metadata?.full_name || user.email.split('@')[0];
   document.getElementById('officerName').textContent = 'Officer: ' + officerName;
 
-  // Load appeals
   await loadAppeals();
 
-  // Set up filter listeners
   document.getElementById('statusFilter').addEventListener('change', filterAppeals);
   document.getElementById('searchAppeal').addEventListener('input', filterAppeals);
+
+  // Expose functions globally
+  window.viewAppealDetails = viewAppealDetails;
+  window.approveAppeal = approveAppeal;
+  window.rejectAppeal = rejectAppeal;
 });
